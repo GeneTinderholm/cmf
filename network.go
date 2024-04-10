@@ -1,6 +1,7 @@
 package cmf
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -84,4 +85,17 @@ func FetchJSON[T any](url string, options ...FetchOptions) (T, error) {
 	}
 	err = json.Unmarshal(bs, &t)
 	return t, err
+}
+
+func PostJSON[T any, U any](url string, body T, options ...FetchOptions) (U, error) {
+	var u U
+
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		return u, err
+	}
+	opts := getOpts(options)
+	opts.Body = bytes.NewReader(bodyBytes)
+	opts.Method = `POST`
+	return FetchJSON[U](url, opts)
 }
