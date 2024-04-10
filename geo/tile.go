@@ -1,8 +1,12 @@
 package geo
 
 import (
+	"context"
 	"image"
 	"image/color"
+	"sync"
+
+	"gene.lol/cmf/config"
 	cmfConstraints "gene.lol/cmf/constraints"
 
 	"golang.org/x/exp/constraints"
@@ -45,7 +49,7 @@ func (at ArrayTile[T]) Set(x, y int, val T) {
 	at.data[y*at.cols+x] = val
 }
 func (at ArrayTile[T]) Map(f func(x, y int, val T) T) ArrayTile[T] {
-	newTile := ArrayTile[T]{rows: at.rows,cols:at.cols, data: make([]T, len(at.data))}
+	newTile := ArrayTile[T]{rows: at.rows, cols: at.cols, data: make([]T, len(at.data))}
 	for i, val := range at.data {
 		newTile.data[i] = f(i%at.cols, i/at.cols, val)
 	}
@@ -53,8 +57,8 @@ func (at ArrayTile[T]) Map(f func(x, y int, val T) T) ArrayTile[T] {
 }
 func (at ArrayTile[T]) LazyMap(f func(x, y int, val T) T) Tile[T] {
 	return FunctionTile[T]{
-		rows:at.rows,
-		cols:at.cols,
+		rows: at.rows,
+		cols: at.cols,
 		f: func(x, y int) T {
 			return f(x, y, at.data[y*at.cols+x])
 		},
@@ -91,16 +95,49 @@ func Render[T any](t Tile[T], cm ColorMap[T]) image.Image {
 	img := image.NewRGBA(image.Rect(0, 0, cols, rows))
 	for y := 0; y < rows; y++ {
 		for x := 0; x < cols; x++ {
-			f := t.Get(x, y)
-			for _, entry := range cm {
-				if entry.Matches(f) {
-					img.Set(x, y, entry.Color(f))
-					break
-				}
-			}
+			renderCell(t, x, y, cm, img)
 		}
 	}
 	return img
+}
+
+func RenderParallel[T any](ctx context.Context, t Tile[T], cm ColorMap[T]) image.Image {
+	rows, cols := t.Dim()
+	img := image.NewRGBA(image.Rect(0, 0, cols, rows))
+
+	numWorkers := config.GetConfig(ctx).Parallelism
+	wg := sync.WaitGroup{}
+	wg.Add(numWorkers)
+	for i := range numWorkers {
+		go func() {
+			defer wg.Done()
+			for y := i; y < rows; y += numWorkers {
+				for x := 0; x < cols; x++ {
+					// renderCell(t, x, y, cm, img)
+					f := t.Get(x, y)
+					for _, entry := range cm {
+						if entry.Matches(f) {
+							img.Set(x, y, entry.Color(f))
+							break
+						}
+					}
+				}
+			}
+		}()
+	}
+	wg.Wait()
+
+	return img
+}
+
+func renderCell[T any](t Tile[T], x, y int, cm ColorMap[T], img *image.RGBA) {
+	f := t.Get(x, y)
+	for _, entry := range cm {
+		if entry.Matches(f) {
+			img.Set(x, y, entry.Color(f))
+			break
+		}
+	}
 }
 
 type ScalarColorMapEntry[T comparable] struct {
