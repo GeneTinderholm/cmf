@@ -1,23 +1,34 @@
 package geo
 
 import (
+	"bytes"
+	_ "embed"
+	"image"
+
 	"context"
 	"image/color"
 	"image/png"
-	"os"
 	"testing"
 
 	"gene.lol/cmf"
+	"gene.lol/cmf/pic"
+	"github.com/stretchr/testify/assert"
 )
+
+//go:embed x-plus-y.png
+var xPlusYBytes []byte
+var xPlusY image.Image
+
+func init() {
+	xPlusY = cmf.Must(png.Decode(bytes.NewReader(xPlusYBytes)))
+}
 
 func TestRender(t *testing.T) {
 	ft := FunctionTile[float64]{
-		rows: 4096,
-		cols: 4096,
+		rows: 1024,
+		cols: 1024,
 		f: func(x, y int) float64 {
-			x2 := x
-			y2 := y
-			return float64(x2 * y2)
+			return float64(x * y)
 		},
 	}
 	img := Render(ft, ColorMap[float64]{
@@ -34,14 +45,13 @@ func TestRender(t *testing.T) {
 			},
 		},
 	})
-	f := cmf.Must(os.Create("test.png"))
-	cmf.CheckErr(png.Encode(f, img))
+	assert.Truef(t, pic.Equal(img, xPlusY), "something changed about rendering in geo.Render")
 }
 
 func TestRenderParallel(t *testing.T) {
 	ft := FunctionTile[float64]{
-		rows: 4096,
-		cols: 4096,
+		rows: 1024,
+		cols: 1024,
 		f: func(x, y int) float64 {
 			x2 := x
 			y2 := y
@@ -62,8 +72,7 @@ func TestRenderParallel(t *testing.T) {
 			},
 		},
 	})
-	f := cmf.Must(os.Create("test-parallel.png"))
-	cmf.CheckErr(png.Encode(f, img))
+	assert.Truef(t, pic.Equal(img, xPlusY), "something changed about rendering in geo.RenderParallel")
 }
 
 // completely unscientific, I left it at the defaults and didn't shut down anything else

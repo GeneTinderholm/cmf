@@ -113,14 +113,7 @@ func RenderParallel[T any](ctx context.Context, t Tile[T], cm ColorMap[T]) image
 			defer wg.Done()
 			for y := i; y < rows; y += numWorkers {
 				for x := 0; x < cols; x++ {
-					// renderCell(t, x, y, cm, img)
-					f := t.Get(x, y)
-					for _, entry := range cm {
-						if entry.Matches(f) {
-							img.Set(x, y, entry.Color(f))
-							break
-						}
-					}
+					renderCell(t, x, y, cm, img)
 				}
 			}
 		}()
