@@ -6,8 +6,8 @@ import (
 	"image/color"
 	"sync"
 
-	"gene.lol/cmf/config"
-	cmfConstraints "gene.lol/cmf/constraints"
+	"github.com/GeneTinderholm/cmf/config"
+	cmfConstraints "github.com/GeneTinderholm/cmf/constraints"
 
 	"golang.org/x/exp/constraints"
 )

@@ -1,4 +1,4 @@
-module gene.lol/cmf
+module github.com/GeneTinderholm/cmf
 
 go 1.22.0
 

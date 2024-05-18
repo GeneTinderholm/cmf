@@ -10,8 +10,8 @@ import (
 	"image/png"
 	"testing"
 
-	"gene.lol/cmf"
-	"gene.lol/cmf/pic"
+	"github.com/GeneTinderholm/cmf"
+	"github.com/GeneTinderholm/cmf/pic"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -81,7 +81,7 @@ func TestRenderParallel(t *testing.T) {
 // go test -bench=.
 // goos: darwin
 // goarch: arm64
-// pkg: gene.lol/cmf/geo
+// pkg: github.com/GeneTinderholm/cmf/geo
 // BenchmarkRender-10            	       3	 449906472 ns/op
 // BenchmarkRenderParallel-10    	      15	  69314189 ns/op
 //
@@ -89,7 +89,7 @@ func TestRenderParallel(t *testing.T) {
 // go test -bench=. -benchtime=100s
 // goos: darwin
 // goarch: arm64
-// pkg: gene.lol/cmf/geo
+// pkg: github.com/GeneTinderholm/cmf/geo
 // BenchmarkRender-10            	     264	 459365071 ns/op
 // BenchmarkRenderParallel-10    	    1712	  71252714 ns/op
 
